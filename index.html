@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Minimarket</title>
+</head>
+<body>
+        <!-- Contenedor principal de la página -->
+    <div class="container">
+        <!-- Sidebar (barra lateral de navegación) -->
+        <div class="sidebar">
+            <div class="logo">MINIMARKET</div>
+            
+            <!-- Sección de navegación principal -->
+            <div class="nav-section">
+                <div class="nav-title">Descubre</div>
+                <!-- Opción de navegación: Inicio -->
+                <a href="#" class="nav-item active" onclick="showSection('inicio')">
+                    <span class="nav-icon">🏠</span>
+                    Inicio
+                </a>
+                <!-- Opción de navegación: Cajero -->
+                <a href="#" class="nav-item" onclick="showSection('cajero')">
+                    <span class="nav-icon">💳</span>
+                    Cajero
+                </a>
+                <!-- Opción de navegación: Informes -->
+                <a href="#" class="nav-item" onclick="showSection('informes')">
+                    <span class="nav-icon">📊</span>
+                    Informes
+                </a>
+                <!-- Opción de navegación: Productos -->
+                <a href="#" class="nav-item" onclick="showSection('productos')">
+                    <span class="nav-icon">📦</span>
+                    Productos
+                </a>
+            </div>
+
+            <!-- Sección de navegación secundaria -->
+            <div class="nav-section">
+                <div class="nav-title">Biblioteca</div>
+                <!-- Opción de navegación: Gestionar productos -->
+                <a href="#" class="nav-item" onclick="showSection('gestionar')">
+                    <span class="nav-icon">⚙️</span>
+                    Gestionar productos
+                </a>
+            </div>
+
+            <!-- Sección de navegación para proveedores y clientes -->
+            <div class="nav-section">
+                <div class="nav-title">Proveedores y clientes</div>
+                <!-- Opción de navegación: Listado de clientes -->
+                <a href="#" class="nav-item" onclick="showSection('clientes')">
+                    <span class="nav-icon">👥</span>
+                    Listado de clientes
+                </a>
+                <!-- Opción de navegación: Listado de proveedores -->
+                <a href="#" class="nav-item" onclick="showSection('proveedor')">
+                    <span class="nav-icon">🏢</span>
+                    Listado de proveedor
+                </a>
+                <!-- Opción de navegación: Agregar cliente -->
+                <a href="#" class="nav-item" onclick="showSection('agregar-cliente')">
+                    <span class="nav-icon">👤</span>
+                    Agregar cliente
+                </a>
+                <!-- Opción de navegación: Agregar proveedor -->
+                <a href="#" class="nav-item" onclick="showSection('agregar-proveedor')">
+                    <span class="nav-icon">🏪</span>
+                    Agregar proveedor
+                </a>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="main-content">
+            <!-- Sección Inicio -->
+            <div class="section active" id="inicio-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Inicio</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="showSection('cajero')">Ir al Cajero</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <!-- Bienvenida -->
+                    <div class="welcome-section">
+                        <h2 class="welcome-title">Bienvenido a MINIMARKET</h2>
+                        <p class="welcome-subtitle">Administra tu negocio de manera eficiente</p>
+                        <!-- Accesos rápidos -->
+                        <div class="quick-actions">
+                            <div class="quick-action" onclick="showSection('cajero')">
+                                <div class="quick-action-icon">💳</div>
+                                <div class="quick-action-title">Punto de Venta</div>
+                                <div class="quick-action-desc">Procesar ventas y cobros</div>
+                            </div>
+                            <div class="quick-action" onclick="showSection('productos')">
+                                <div class="quick-action-icon">📦</div>
+                                <div class="quick-action-title">Ver Productos</div>
+                                <div class="quick-action-desc">Consultar inventario</div>
+                            </div>
+                            <div class="quick-action" onclick="showSection('informes')">
+                                <div class="quick-action-icon">📊</div>
+                                <div class="quick-action-title">Reportes</div>
+                                <div class="quick-action-desc">Analizar ventas</div>
+                            </div>
+                            <div class="quick-action" onclick="showSection('clientes')">
+                                <div class="quick-action-icon">👥</div>
+                                <div class="quick-action-title">Clientes</div>
+                                <div class="quick-action-desc">Gestionar clientes</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Estadísticas -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalProducts">20</div>
+                            <div class="stat-label">Productos en inventario</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalSales">7</div>
+                            <div class="stat-label">Ventas hoy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalRevenue">$350.00</div>
+                            <div class="stat-label">Ingresos del día</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="lowStockProducts">3</div>
+                            <div class="stat-label">Productos con stock bajo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Cajero -->
+            <div class="section" id="cajero-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Cajero</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="showSalesModal()">Ver ventas realizadas</button>
+                            <button class="btn btn-primary" onclick="clearCart()">Nueva venta</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="cashier-container">
+                    <!-- Punto de venta -->
+                    <div class="pos-section">
+                        <div class="pos-header">
+                            <h2 class="pos-title">Punto de Venta</h2>
+                            <!-- Búsqueda de productos -->
+                            <div class="search-section">
+                                <input type="text" class="search-input" placeholder="Buscar producto por nombre..." 
+                                       id="productSearch" onkeyup="searchProducts()">
+                                <button class="btn btn-primary" onclick="searchProducts()">Buscar</button>
+                            </div>
+                            <!-- Escaneo de código de barras -->
+                            <div class="barcode-section">
+                                <input type="text" class="barcode-input" placeholder="Escanear código de barras..." 
+                                       id="barcodeInput" onkeydown="handleBarcodeInput(event)">
+                                <button class="btn btn-secondary" onclick="addByBarcode()">Agregar</button>
+                            </div>
+                        </div>
+                        <!-- Productos disponibles -->
+                        <div class="products-grid" id="productsGrid">
+                            <!-- Los productos se cargarán aquí -->
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 24px; flex: 1;">
+                        <div class="pos-section">
+                            <div class="pos-header">
+                                <h3 class="pos-title">Carrito de compras</h3>
+                            </div>
+                            <div class="cart-section">
+                                <div class="cart-items" id="cartItems">
+                                    <div class="empty-cart">
+                                        <p>No hay productos en el carrito</p>
+                                        <p style="font-size: 14px; margin-top: 8px;">Busca y agrega productos para comenzar</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="cart-total" id="cartTotal" style="display: none;">
+                                    <div class="total-row">
+                                        <span>Subtotal:</span>
+                                        <span id="subtotal">$0.00</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span>IVA (19%):</span>
+                                        <span id="tax">$0.00</span>
+                                    </div>
+                                    <div class="total-row total-final">
+                                        <span>Total:</span>
+                                        <span id="total">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-section">
+                            <h3 style="margin-bottom: 16px; font-weight: 600;">Método de pago</h3>
+                            <div class="payment-methods">
+                                <div class="payment-method selected" onclick="selectPayment('efectivo')">
+                                    <input type="radio" name="payment" value="efectivo" checked class="payment-radio">
+                                    <span>💵 Efectivo</span>
+                                </div>
+                                <div class="payment-method" onclick="selectPayment('tarjeta')">
+                                    <input type="radio" name="payment" value="tarjeta" class="payment-radio">
+                                    <span>💳 Tarjeta</span>
+                                </div>
+                                <div class="payment-method" onclick="selectPayment('transferencia')">
+                                    <input type="radio" name="payment" value="transferencia" class="payment-radio">
+                                    <span>📱 Transferencia</span>
+                                </div>
+                            </div>
+
+                            <div id="cashPayment">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Monto recibido:</label>
+                                <input type="number" class="amount-input" id="receivedAmount" 
+                                       placeholder="0.00" onkeyup="calculateChange()" step="0.01">
+                                <div class="change-info" id="changeInfo" style="display: none;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Cambio:</span>
+                                        <span id="changeAmount" style="font-weight: 600;">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="btn-complete" id="completeBtn" onclick="completeSale()" disabled>
+                                Completar venta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Informes -->
+            <div class="section" id="informes-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Informes</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Exportar PDF</button>
+                            <button class="btn btn-primary">Generar reporte</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">$350.00</div>
+                            <div class="stat-label">Ventas del día</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">$2,450.00</div>
+                            <div class="stat-label">Ventas del mes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">7</div>
+                            <div class="stat-label">Transacciones hoy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">$50.00</div>
+                            <div class="stat-label">Venta promedio</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 20px;">Ventas por método de pago</h3>
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 20px; height: 20px; background: #6366f1; border-radius: 4px;"></div>
+                                <span>Efectivo (57%)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 20px; height: 20px; background: #10b981; border-radius: 4px;"></div>
+                                <span>Tarjeta (29%)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 4px;"></div>
+                                <span>Transferencia (14%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-table">
+                        <div class="table-header">
+                            <h3 class="table-title">Productos más vendidos</h3>
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad vendida</th>
+                                        <th>Ingresos</th>
+                                        <th>% del total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Coca Cola 350ml</td>
+                                        <td>15</td>
+                                        <td>$37.50</td>
+                                        <td>10.7%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pan de molde</td>
+                                        <td>12</td>
+                                        <td>$38.40</td>
+                                        <td>11.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Leche entera 1L</td>
+                                        <td>8</td>
+                                        <td>$38.40</td>
+                                        <td>11.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Galletas Oreo</td>
+                                        <td>10</td>
+                                        <td>$39.00</td>
+                                        <td>11.1%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Productos -->
+            <div class="section" id="productos-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Productos</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="showSection('gestionar')">Gestionar</button>
+                            <button class="btn btn-primary" onclick="addNewProduct()">Agregar producto</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="data-table">
+                        <div class="table-header">
+                            <h3 class="table-title">Inventario de productos</h3>
+                            <input type="text" class="search-input" style="width: 300px;" placeholder="Buscar productos..." 
+                                   onkeyup="filterProducts()">
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Precio</th>
+                                        <th>Stock</th>
+                                        <th>Código de barras</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <!-- Se llenará con JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Gestionar Productos -->
+            <div class="section" id="gestionar-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Gestionar productos</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="showSection('productos')">Ver todos</button>
+                            <button class="btn btn-primary" onclick="addNewProduct()">Nuevo producto</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="form-container" id="productForm">
+                        <h3 style="margin-bottom: 24px;">Agregar nuevo producto</h3>
+                        <form onsubmit="saveProduct(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nombre del producto</label>
+                                <input type="text" class="form-input" id="productName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Precio</label>
+                                <input type="number" class="form-input" id="productPrice" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stock inicial</label>
+                                <input type="number" class="form-input" id="productStock" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Código de barras</label>
+                                <input type="text" class="form-input" id="productBarcode" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Descripción (opcional)</label>
+                                <textarea class="form-textarea" id="productDescription" placeholder="Descripción del producto"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="clearProductForm()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar producto</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Listado de Clientes -->
+            <div class="section" id="clientes-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Listado de clientes</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Exportar</button>
+                            <button class="btn btn-primary" onclick="showSection('agregar-cliente')">Agregar cliente</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="data-table">
+                        <div class="table-header">
+                            <h3 class="table-title">Clientes registrados</h3>
+                            <input type="text" class="search-input" style="width: 300px;" placeholder="Buscar clientes...">
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Teléfono</th>
+                                        <th>Total compras</th>
+                                        <th>Última compra</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Juan Pérez</td>
+                                        <td>juan@email.com</td>
+                                        <td>+57 300 123 4567</td>
+                                        <td>$125.50</td>
+                                        <td>2025-12-12</td>
+                                        <td>
+                                            <button class="action-btn btn-edit">Editar</button>
+                                            <button class="action-btn btn-delete">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>María García</td>
+                                        <td>maria@email.com</td>
+                                        <td>+57 301 234 5678</td>
+                                        <td>$89.20</td>
+                                        <td>2025-12-11</td>
+                                        <td>
+                                            <button class="action-btn btn-edit">Editar</button>
+                                            <button class="action-btn btn-delete">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Carlos López</td>
+                                        <td>carlos@email.com</td>
+                                        <td>+57 302 345 6789</td>
+                                        <td>$67.80</td>
+                                        <td>2025-12-10</td>
+                                        <td>
+                                            <button class="action-btn btn-edit">Editar</button>
+                                            <button class="action-btn btn-delete">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Listado de Proveedores -->
+            <div class="section" id="proveedor-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Listado de proveedores</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Exportar</button>
+                            <button class="btn btn-primary" onclick="showSection('agregar-proveedor')">Agregar proveedor</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="data-table">
+                        <div class="table-header">
+                            <h3 class="table-title">Proveedores registrados</h3>
+                            <input type="text" class="search-input" style="width: 300px;" placeholder="Buscar proveedores...">
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Empresa</th>
+                                        <th>Contacto</th>
+                                        <th>Email</th>
+                                        <th>Teléfono</th>
+                                        <th>Productos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Distribuidora La Gran Vía</td>
+                                        <td>Roberto Silva</td>
+                                        <td>ventas@granvia.com</td>
+                                        <td>+57 320 456 7890</td>
+                                        <td>Bebidas, Snacks</td>
+                                        <td>
+                                            <button class="action-btn btn-edit">Editar</button>
+                                            <button class="action-btn btn-delete">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Lácteos del Valle</td>
+                                        <td>Ana Morales</td>
+                                        <td>info@lacteosvalle.com</td>
+                                        <td>+57 321 567 8901</td>
+                                        <td>Lácteos, Yogurt</td>
+                                        <td>
+                                            <button class="action-btn btn-edit">Editar</button>
+                                            <button class="action-btn btn-delete">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Productos de Limpieza XYZ</td>
+                                        <td>Miguel Rodríguez</td>
+                                        <td>contacto@limpiezaxyz.com</td>
+                                        <td>+57 322 678 9012</td>
+                                        <td>Limpieza, Higiene</td>
+                                        <td>
+                                            <button class="action-btn btn-edit">Editar</button>
+                                            <button class="action-btn btn-delete">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Agregar Cliente -->
+            <div class="section" id="agregar-cliente-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Agregar cliente</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="showSection('clientes')">Ver clientes</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="form-container">
+                        <h3 style="margin-bottom: 24px;">Nuevo cliente</h3>
+                        <form onsubmit="saveClient(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nombre completo</label>
+                                <input type="text" class="form-input" id="clientName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="clientEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-input" id="clientPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dirección</label>
+                                <textarea class="form-textarea" id="clientAddress" placeholder="Dirección completa"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Notas adicionales</label>
+                                <textarea class="form-textarea" id="clientNotes" placeholder="Información adicional del cliente"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="clearClientForm()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar cliente</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Agregar Proveedor -->
+            <div class="section" id="agregar-proveedor-section">
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">Agregar proveedor</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="showSection('proveedor')">Ver proveedores</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="form-container">
+                        <h3 style="margin-bottom: 24px;">Nuevo proveedor</h3>
+                        <form onsubmit="saveSupplier(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nombre de la empresa</label>
+                                <input type="text" class="form-input" id="supplierCompany" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Persona de contacto</label>
+                                <input type="text" class="form-input" id="supplierContact" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="supplierEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-input" id="supplierPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dirección</label>
+                                <textarea class="form-textarea" id="supplierAddress" placeholder="Dirección completa"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Productos que suministra</label>
+                                <textarea class="form-textarea" id="supplierProducts" placeholder="Lista de productos o categorías"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="clearSupplierForm()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar proveedor</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de ventas realizadas -->
+    <div class="sales-modal" id="salesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ventas realizadas</h2>
+                <button class="modal-close" onclick="closeSalesModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Cliente</th>
+                            <th>Estado</th>
+                            <th>Total factura</th>
+                            <th>Fecha</th>
+                            <th>Método pago</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                        <!-- Las ventas se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
