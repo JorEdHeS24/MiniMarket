@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Minimarket</title>
 </head>
 
@@ -15,22 +16,22 @@
 
             <div class="nav-section">
                 <div class="nav-title">Descubre</div>
-                <a href="#" class="nav-item" onclick="showSection('inicio'); return false;">
+                <a href="#" class="nav-item" id="nav-inicio" onclick="showSection('inicio'); return false;">
                     <span class="nav-icon">🏠</span>
                     Inicio
                 </a>
                 <!-- Opción de navegación: Cajero -->
-                <a href="#" class="nav-item" onclick="showSection('cajero')">
+                <a href="#" class="nav-item" id="nav-cajero" onclick="showSection('cajero')">
                     <span class="nav-icon">💳</span>
                     Cajero
                 </a>
                 <!-- Opción de navegación: Informes -->
-                <a href="#" class="nav-item" onclick="showSection('informes')">
+                <a href="#" class="nav-item" id="nav-informes" onclick="showSection('informes')">
                     <span class="nav-icon">📊</span>
                     Informes
                 </a>
                 <!-- Opción de navegación: Productos -->
-                <a href="#" class="nav-item" onclick="showSection('productos')">
+                <a href="#" class="nav-item" id="nav-productos" onclick="showSection('productos')">
                     <span class="nav-icon">📦</span>
                     Productos
                 </a>
@@ -41,12 +42,12 @@
             <div class="nav-section">
                 <div class="nav-title">Proveedores y clientes</div>
                 <!-- Opción de navegación: Listado de clientes -->
-                <a href="#" class="nav-item" onclick="showSection('clientes')">
+                <a href="#" class="nav-item" id="nav-clientes" onclick="showSection('clientes')">
                     <span class="nav-icon">👥</span>
                     Listado de clientes
                 </a>
                 <!-- Opción de navegación: Listado de proveedores -->
-                <a href="#" class="nav-item" onclick="showSection('proveedor')">
+                <a href="#" class="nav-item" id="nav-proveedor" onclick="showSection('proveedor')">
                     <span class="nav-icon">🏢</span>
                     Listado de proveedor
                 </a>
@@ -215,118 +216,56 @@
                 </div>
             </div>
 
-            <!-- Sección Informes -->
+            <!-- Reports Section -->
             <div class="section" id="informes-section">
                 <div class="header">
                     <div class="header-top">
-                        <h1 class="page-title">Informes</h1>
+                        <h1 class="page-title">Informes de Ventas</h1>
                         <div class="header-actions">
-                            <button class="btn btn-secondary">Exportar PDF</button>
-                            <button class="btn btn-primary">Generar reporte</button>
+                            <select id="time-range-selector" class="form-input" onchange="updateReports()">
+                                <option value="today">Hoy</option>
+                                <option value="week">Esta Semana</option>
+                                <option value="month">Este Mes</option>
+                                <option value="year">Este Año</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="exportPDF()">Exportar a PDF</button>
                         </div>
                     </div>
                 </div>
+            
                 <div class="content-area">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number">$350.00</div>
-                            <div class="stat-label">Ventas del día</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">$2,450.00</div>
-                            <div class="stat-label">Ventas del mes</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">7</div>
-                            <div class="stat-label">Transacciones hoy</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">$50.00</div>
-                            <div class="stat-label">Venta promedio</div>
-                        </div>
+                    <div class="stats-grid" id="reports-stats-grid">
                     </div>
-
-                    <div class="chart-container">
-                        <h3 style="margin-bottom: 20px;">Ventas por método de pago</h3>
-                        <div style="display: flex; gap: 20px; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 20px; height: 20px; background: #6366f1; border-radius: 4px;"></div>
-                                <span>Efectivo (57%)</span>
+            
+                    <div class="charts-container">
+                        <div class="chart-card">
+                            <h3>Ventas por Categoría</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="category-chart"></canvas>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 20px; height: 20px; background: #10b981; border-radius: 4px;"></div>
-                                <span>Tarjeta (29%)</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 4px;"></div>
-                                <span>Transferencia (14%)</span>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Ventas por Método de Pago</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="payment-method-chart"></canvas>
                             </div>
                         </div>
                     </div>
-
-                    <div class="data-table">
+            
+                    <div class="data-table" style="margin-top: 24px;">
                         <div class="table-header">
-                            <h3 class="table-title">Productos más vendidos</h3>
+                            <h3 class="table-title">Productos Más Vendidos</h3>
                         </div>
                         <div class="table-content">
                             <table>
                                 <thead>
                                     <tr>
                                         <th>Producto</th>
-                                        <th>Cantidad vendida</th>
-                                        <th>Ingresos</th>
-                                        <th>% del total</th>
+                                        <th>Cantidad Vendida</th>
+                                        <th>Ingresos Generados</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Coca Cola 350ml</td>
-                                        <td>15</td>
-                                        <td>$37.50</td>
-                                        <td>10.7%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Pan de molde</td>
-                                        <td>12</td>
-                                        <td>$38.40</td>
-                                        <td>11.0%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Leche entera 1L</td>
-                                        <td>8</td>
-                                        <td>$38.40</td>
-                                        <td>11.0%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Galletas Oreo</td>
-                                        <td>10</td>
-                                        <td>$39.00</td>
-                                        <td>11.1%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Jugo de naranja 1L</td>
-                                        <td>9</td>
-                                        <td>$36.00</td>
-                                        <td>10.3%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Agua mineral 500ml</td>
-                                        <td>20</td>
-                                        <td>$30.00</td>
-                                        <td>8.6%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Snacks variados</td>
-                                        <td>25</td>
-                                        <td>$62.50</td>
-                                        <td>17.9%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Chocolate 100g</td>
-                                        <td>30</td>
-                                        <td>$75.00</td>
-                                        <td>21.4%</td>
-                                    </tr>
+                                <tbody id="best-selling-products-body">
                                 </tbody>
                             </table>
                         </div>
@@ -334,13 +273,13 @@
                 </div>
             </div>
 
-            <!-- Sección Productos (nueva) -->
+            <!-- Sección Productos -->
             <div class="section" id="productos-section">
                 <div class="header">
                     <div class="header-top">
                         <h1 class="page-title">Productos</h1>
                         <div class="header-actions">
-                            <button class="btn btn-primary" onclick="openAddProductModal()">Agregar producto</button>
+                            <button class="btn btn-primary" onclick="openProductModal()">Agregar producto</button>
                         </div>
                     </div>
                 </div>
@@ -353,110 +292,17 @@
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>ID</th>
                                         <th>Producto</th>
                                         <th>Categoría</th>
                                         <th>Precio</th>
                                         <th>Stock</th>
+                                        <th>Código de Barras</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Coca Cola 350ml</td>
-                                        <td>Bebidas</td>
-                                        <td>$2.50</td>
-                                        <td>100</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(1)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(1)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Pan de molde</td>
-                                        <td>Alimentos</td>
-                                        <td>$3.20</td>
-                                        <td>50</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(2)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(2)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Leche entera 1L</td>
-                                        <td>Lácteos</td>
-                                        <td>$2.80</td>
-                                        <td>30</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(3)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(3)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Galletas Oreo</td>
-                                        <td>Snacks</td>
-                                        <td>$1.50</td>
-                                        <td>200</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(4)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(4)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Jugo de naranja 1L</td>
-                                        <td>Bebidas</td>
-                                        <td>$2.00</td>
-                                        <td>80</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(5)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(5)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Agua mineral 500ml</td>
-                                        <td>Bebidas</td>
-                                        <td>$1.00</td>
-                                        <td>150</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(6)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(6)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Snacks variados</td>
-                                        <td>Snacks</td>
-                                        <td>$2.50</td>
-                                        <td>75</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(7)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(7)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Chocolate 100g</td>
-                                        <td>Snacks</td>
-                                        <td>$1.20</td>
-                                        <td>120</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editProduct(8)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteProduct(8)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
+                                <tbody id="productsTableBody">
+                                    <!-- Los productos se cargarán aquí dinámicamente -->
                                 </tbody>
                             </table>
                         </div>
@@ -464,14 +310,13 @@
                 </div>
             </div>
 
-            <!-- Sección Clientes (nueva) -->
+            <!-- Sección Clientes -->
             <div class="section" id="clientes-section">
                 <div class="header">
                     <div class="header-top">
                         <h1 class="page-title">Clientes</h1>
                         <div class="header-actions">
-                            <button class="btn btn-primary" onclick="showSection('agregar-cliente')">Agregar
-                                cliente</button>
+                            <button class="btn btn-primary" onclick="openClientModal()">Agregar cliente</button>
                         </div>
                     </div>
                 </div>
@@ -484,6 +329,7 @@
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>ID</th>
                                         <th>Nombre</th>
                                         <th>Email</th>
                                         <th>Teléfono</th>
@@ -491,103 +337,8 @@
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Juan Pérez</td>
-                                        <td>juanperez@email.com</td>
-                                        <td>987654321</td>
-                                        <td>Calle Falsa 123</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(1)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(1)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>María Gómez</td>
-                                        <td>mariagomez@email.com</td>
-                                        <td>912345678</td>
-                                        <td>Avenida Siempre Viva 742</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(2)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(2)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Pedro López</td>
-                                        <td>pedrolopez@email.com</td>
-                                        <td>987123456</td>
-                                        <td>Calle Verdadera 456</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(3)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(3)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Luisa Martínez</td>
-                                        <td>luismartinez@email.com</td>
-                                        <td>963852741</td>
-                                        <td>Avenida del Libertador 852</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(4)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(4)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Carlos Sánchez</td>
-                                        <td>carlossanchez@email.com</td>
-                                        <td>789456123</td>
-                                        <td>Calle de la Paz 159</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(5)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(5)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ana Torres</td>
-                                        <td>anatorres@email.com</td>
-                                        <td>654789321</td>
-                                        <td>Avenida de Mayo 753</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(6)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(6)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Jorge Díaz</td>
-                                        <td>jorgediaz@email.com</td>
-                                        <td>321654987</td>
-                                        <td>Calle de la Libertad 951</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(7)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(7)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Laura Fernández</td>
-                                        <td>laurafernandez@email.com</td>
-                                        <td>147258369</td>
-                                        <td>Avenida de la República 159</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editClient(8)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteClient(8)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
+                                <tbody id="clientsTableBody">
+                                    <!-- Los clientes se cargarán aquí dinámicamente -->
                                 </tbody>
                             </table>
                         </div>
@@ -595,13 +346,13 @@
                 </div>
             </div>
 
-            <!-- Sección Proveedor (nueva) -->
+            <!-- Sección Proveedor -->
             <div class="section" id="proveedor-section">
                 <div class="header">
                     <div class="header-top">
                         <h1 class="page-title">Proveedores</h1>
                         <div class="header-actions">
-                            <button class="btn btn-primary" onclick="openAddProductModal()">Agregar producto</button>
+                            <button class="btn btn-primary" onclick="openSupplierModal()">Agregar proveedor</button>
                         </div>
                     </div>
                 </div>
@@ -614,6 +365,7 @@
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>ID</th>
                                         <th>Empresa</th>
                                         <th>Contacto</th>
                                         <th>Email</th>
@@ -623,119 +375,8 @@
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Proveedor 1</td>
-                                        <td>Contacto 1</td>
-                                        <td>proveedor1@email.com</td>
-                                        <td>987654321</td>
-                                        <td>Calle Proveedor 1</td>
-                                        <td>Producto A, Producto B</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(1)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(1)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Proveedor 2</td>
-                                        <td>Contacto 2</td>
-                                        <td>proveedor2@email.com</td>
-                                        <td>912345678</td>
-                                        <td>Avenida Proveedor 2</td>
-                                        <td>Producto C, Producto D</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(2)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(2)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Proveedor 3</td>
-                                        <td>Contacto 3</td>
-                                        <td>proveedor3@email.com</td>
-                                        <td>987123456</td>
-                                        <td>Calle Proveedor 3</td>
-                                        <td>Producto E, Producto F</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(3)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(3)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Proveedor 4</td>
-                                        <td>Contacto 4</td>
-                                        <td>proveedor4@email.com</td>
-                                        <td>963852741</td>
-                                        <td>Avenida Proveedor 4</td>
-                                        <td>Producto G, Producto H</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(4)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(4)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Proveedor 5</td>
-                                        <td>Contacto 5</td>
-                                        <td>proveedor5@email.com</td>
-                                        <td>789456123</td>
-                                        <td>Calle Proveedor 5</td>
-                                        <td>Producto I, Producto J</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(5)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(5)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Proveedor 6</td>
-                                        <td>Contacto 6</td>
-                                        <td>proveedor6@email.com</td>
-                                        <td>654789321</td>
-                                        <td>Avenida Proveedor 6</td>
-                                        <td>Producto K, Producto L</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(6)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(6)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Proveedor 7</td>
-                                        <td>Contacto 7</td>
-                                        <td>proveedor7@email.com</td>
-                                        <td>321654987</td>
-                                        <td>Calle Proveedor 7</td>
-                                        <td>Producto M, Producto N</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(7)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(7)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Proveedor 8</td>
-                                        <td>Contacto 8</td>
-                                        <td>proveedor8@email.com</td>
-                                        <td>147258369</td>
-                                        <td>Avenida Proveedor 8</td>
-                                        <td>Producto O, Producto P</td>
-                                        <td>
-                                            <button class="action-btn btn-edit" onclick="editSupplier(8)">✏️
-                                                Editar</button>
-                                            <button class="action-btn btn-delete" onclick="deleteSupplier(8)">🗑️
-                                                Eliminar</button>
-                                        </td>
-                                    </tr>
+                                <tbody id="suppliersTableBody">
+                                    <!-- Los proveedores se cargarán aquí dinámicamente -->
                                 </tbody>
                             </table>
                         </div>
@@ -743,16 +384,92 @@
                 </div>
             </div>
 
-            <!-- Sección Agregar Cliente (nueva) -->
-            <div class="section" id="agregar-cliente-section">
-                <div class="header">
-                    <div class="header-top">
-                        <h1 class="page-title">Agregar Cliente</h1>
+            <!-- Modal para Agregar/Editar Producto -->
+            <div class="modal" id="productModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="productModalTitle">Agregar Producto</h2>
+                        <button class="modal-close" onclick="closeProductModal()">✖</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="productForm" onsubmit="saveProduct(event)">
+                            <input type="hidden" id="productId">
+                            <div class="form-group">
+                                <label for="productName" class="form-label">Nombre del producto</label>
+                                <input type="text" id="productName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productCategory" class="form-label">Categoría</label>
+                                <input type="text" id="productCategory" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productPrice" class="form-label">Precio</label>
+                                <input type="number" id="productPrice" class="form-input" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productStock" class="form-label">Stock</label>
+                                <input type="number" id="productStock" class="form-input" required>
+                            </div>
+                             <div class="form-group">
+                                <label for="productBarcode" class="form-label">Código de Barras</label>
+                                <input type="text" id="productBarcode" class="form-input" >
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="button" class="btn btn-secondary"
+                                    onclick="closeProductModal()">Cancelar
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <div class="content-area">
-                    <div class="form-container">
+            </div>
+            
+            <!-- Modal para Agregar/Editar Cliente -->
+            <div class="modal" id="clientModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="clientModalTitle">Agregar Cliente</h2>
+                        <button class="modal-close" onclick="closeClientModal()">✖</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="clientForm" onsubmit="saveClient(event)">
+                            <input type="hidden" id="clientId">
+                            <div class="form-group">
+                                <label for="clientName" class="form-label">Nombre</label>
+                                <input type="text" id="clientName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientEmail" class="form-label">Email</label>
+                                <input type="email" id="clientEmail" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientPhone" class="form-label">Teléfono</label>
+                                <input type="tel" id="clientPhone" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientAddress" class="form-label">Dirección</label>
+                                <input type="text" id="clientAddress" class="form-input">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="button" class="btn btn-secondary" onclick="closeClientModal()">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Agregar/Editar Proveedor -->
+            <div class="modal" id="supplierModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="supplierModalTitle">Agregar Proveedor</h2>
+                        <button class="modal-close" onclick="closeSupplierModal()">✖</button>
+                    </div>
+                    <div class.modal-body">
                         <form id="supplierForm" onsubmit="saveSupplier(event)">
+                            <input type="hidden" id="supplierId">
                             <div class="form-group">
                                 <label for="supplierCompany" class="form-label">Nombre de la empresa</label>
                                 <input type="text" id="supplierCompany" class="form-input" required>
@@ -778,170 +495,16 @@
                                 <input type="text" id="supplierProducts" class="form-input">
                             </div>
                             <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Guardar proveedor</button>
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="clearSupplierForm()">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección Agregar Producto (nueva) -->
-            <div class="section" id="agregar-producto-section">
-                <div class="header">
-                    <div class="header-top">
-                        <h1 class="page-title">Agregar Producto</h1>
-                    </div>
-                </div>
-                <div class="content-area">
-                    <div class="form-container">
-                        <form id="productForm" onsubmit="saveProduct(event)">
-                            <div class="form-group">
-                                <label for="productName" class="form-label">Nombre del producto</label>
-                                <input type="text" id="productName" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="productCategory" class="form-label">Categoría</label>
-                                <input type="text" id="productCategory" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="productPrice" class="form-label">Precio</label>
-                                <input type="number" id="productPrice" class="form-input" step="0.01" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="productStock" class="form-label">Stock</label>
-                                <input type="number" id="productStock" class="form-input" required>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Guardar producto</button>
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="clearProductForm()">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección Editar Cliente (nueva) -->
-            <div class="section" id="editar-cliente-section">
-                <div class="header">
-                    <div class="header-top">
-                        <h1 class="page-title">Editar Cliente</h1>
-                    </div>
-                </div>
-                <div class="content-area">
-                    <div class="form-container">
-                        <form id="editClientForm" onsubmit="updateClient(event)">
-                            <input type="hidden" id="editClientId">
-                            <div class="form-group">
-                                <label for="editClientName" class="form-label">Nombre</label>
-                                <input type="text" id="editClientName" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editClientEmail" class="form-label">Email</label>
-                                <input type="email" id="editClientEmail" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editClientPhone" class="form-label">Teléfono</label>
-                                <input type="tel" id="editClientPhone" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editClientAddress" class="form-label">Dirección</label>
-                                <input type="text" id="editClientAddress" class="form-input">
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Actualizar cliente</button>
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="showSection('clientes')">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección Editar Proveedor (nueva) -->
-            <div class="section" id="editar-proveedor-section">
-                <div class="header">
-                    <div class="header-top">
-                        <h1 class="page-title">Editar Proveedor</h1>
-                    </div>
-                </div>
-                <div class="content-area">
-                    <div class="form-container">
-                        <form id="editSupplierForm" onsubmit="updateSupplier(event)">
-                            <input type="hidden" id="editSupplierId">
-                            <div class="form-group">
-                                <label for="editSupplierCompany" class="form-label">Nombre de la empresa</label>
-                                <input type="text" id="editSupplierCompany" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editSupplierContact" class="form-label">Nombre del contacto</label>
-                                <input type="text" id="editSupplierContact" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editSupplierEmail" class="form-label">Email</label>
-                                <input type="email" id="editSupplierEmail" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editSupplierPhone" class="form-label">Teléfono</label>
-                                <input type="tel" id="editSupplierPhone" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editSupplierAddress" class="form-label">Dirección</label>
-                                <input type="text" id="editSupplierAddress" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label for="editSupplierProducts" class="form-label">Productos suministrados</label>
-                                <input type="text" id="editSupplierProducts" class="form-input">
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Actualizar proveedor</button>
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="showSection('proveedor')">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal único -->
-            <div class="modal" id="addProductModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Agregar Producto</h2>
-                        <button class="modal-close" onclick="closeAddProductModal()">✖</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addProductForm" onsubmit="addNewProduct(event)">
-                            <div class="form-group">
-                                <label for="newProductName" class="form-label">Nombre del producto</label>
-                                <input type="text" id="newProductName" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="newProductCategory" class="form-label">Categoría</label>
-                                <input type="text" id="newProductCategory" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="newProductPrice" class="form-label">Precio</label>
-                                <input type="number" id="newProductPrice" class="form-input" step="0.01" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="newProductStock" class="form-label">Stock</label>
-                                <input type="number" id="newProductStock" class="form-input" required>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Guardar producto</button>
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="closeAddProductModal()">Cancelar
-                                </button>
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="button" class="btn btn-secondary" onclick="closeSupplierModal()">Cancelar</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        <script src="script.js"></script>
+    </div>
+    <script src="main.js"></script>
 </body>
 
 </html>
