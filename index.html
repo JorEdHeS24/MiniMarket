@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Minimarket</title>
+    <script type="module" src="main.js"></script>
 </head>
 
 <body>
@@ -20,17 +22,14 @@
                     <span class="nav-icon">🏠</span>
                     Inicio
                 </a>
-                <!-- Opción de navegación: Cajero -->
                 <a href="#" class="nav-item" id="nav-cajero" onclick="showSection('cajero')">
                     <span class="nav-icon">💳</span>
                     Cajero
                 </a>
-                <!-- Opción de navegación: Informes -->
                 <a href="#" class="nav-item" id="nav-informes" onclick="showSection('informes')">
                     <span class="nav-icon">📊</span>
                     Informes
                 </a>
-                <!-- Opción de navegación: Productos -->
                 <a href="#" class="nav-item" id="nav-productos" onclick="showSection('productos')">
                     <span class="nav-icon">📦</span>
                     Productos
@@ -38,15 +37,12 @@
             </div>
 
 
-            <!-- Sección de navegación para proveedores y clientes -->
             <div class="nav-section">
                 <div class="nav-title">Proveedores y clientes</div>
-                <!-- Opción de navegación: Listado de clientes -->
                 <a href="#" class="nav-item" id="nav-clientes" onclick="showSection('clientes')">
                     <span class="nav-icon">👥</span>
                     Listado de clientes
                 </a>
-                <!-- Opción de navegación: Listado de proveedores -->
                 <a href="#" class="nav-item" id="nav-proveedor" onclick="showSection('proveedor')">
                     <span class="nav-icon">🏢</span>
                     Listado de proveedor
@@ -504,7 +500,6 @@
             </div>
         </div>
     </div>
-    <script src="main.js"></script>
 </body>
 
 </html>

@@ -1,100 +1,154 @@
+import { db } from "./firebase-config.js";
+import {
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    writeBatch
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { protectPage, logout } from "./auth.js";
 
-// Check for user authentication status
-firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-        // User is signed in, initialize the app
-        initializeApp();
-    } else {
-        // No user is signed in, redirect to login
-        window.location.href = 'login.html';
-    }
+// =================================================================================
+// App Initialization
+// =================================================================================
+window.addEventListener('DOMContentLoaded', () => {
+    // The protectPage function is imported from auth.js.
+    // It will check if the user is logged in. If so, it will call initializeApp.
+    // If not, it will redirect to login.html.
+    protectPage(initializeApp);
 });
 
-function initializeApp() {
+// =================================================================================
+// Global State
+// =================================================================================
+let products = [];
+let clients = [];
+let suppliers = [];
+let sales = [];
+let cart = [];
+let categoryChart = null;
+let paymentMethodChart = null;
+
+// =================================================================================
+// Main App Logic
+// =================================================================================
+
+async function initializeApp(user) {
+    console.log("Authenticated user:", user.email);
+    console.log("Initializing app...");
+
+    // Dynamically add the logout button to the sidebar
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        const logoutButton = document.createElement('a');
+        logoutButton.href = "#";
+        logoutButton.className = "nav-item";
+        logoutButton.id = "nav-logout";
+        logoutButton.innerHTML = '<span class="nav-icon">🚪</span>Cerrar Sesión';
+        logoutButton.onclick = (e) => {
+            e.preventDefault();
+            logout();
+        };
+        // Add it after the last nav-section for better grouping
+        sidebar.appendChild(logoutButton);
+    }
+
+    // Load all data from Firestore
+    await loadAllData();
+
+    // Set up UI event listeners
+    setupEventListeners();
+
+    // Initial render of all dynamic content
+    renderAll();
+
+    // Show the 'inicio' section by default
     showSection('inicio');
-    loadProducts();
-    loadClients();
-    loadSuppliers();
+    console.log("App initialized successfully.");
+}
+
+async function loadAllData() {
+    console.log("Loading all data from Firestore...");
+    try {
+        const [productsSnapshot, clientsSnapshot, suppliersSnapshot, salesSnapshot] = await Promise.all([
+            getDocs(collection(db, "products")),
+            getDocs(collection(db, "clients")),
+            getDocs(collection(db, "suppliers")),
+            getDocs(collection(db, "sales"))
+        ]);
+
+        products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        clients = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        suppliers = suppliersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        sales = salesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        console.log("Data loaded:", { products, clients, suppliers, sales });
+    } catch (error) {
+        console.error("Error loading data from Firestore:", error);
+        alert("Error al cargar los datos. Por favor, revisa la consola para más detalles.");
+    }
+}
+
+function setupEventListeners() {
+    // Navigation
+    document.getElementById('nav-inicio').addEventListener('click', () => showSection('inicio'));
+    document.getElementById('nav-cajero').addEventListener('click', () => showSection('cajero'));
+    document.getElementById('nav-informes').addEventListener('click', () => showSection('informes'));
+    document.getElementById('nav-productos').addEventListener('click', () => showSection('productos'));
+    document.getElementById('nav-clientes').addEventListener('click', () => showSection('clientes'));
+    document.getElementById('nav-proveedor').addEventListener('click', () => showSection('proveedor'));
+
+    // Forms
+    document.getElementById('productForm').addEventListener('submit', saveProduct);
+    document.getElementById('clientForm').addEventListener('submit', saveClient);
+    document.getElementById('supplierForm').addEventListener('submit', saveSupplier);
+
+    // Search and Barcode
+    document.getElementById('productSearch').addEventListener('keyup', searchProducts);
+    document.getElementById('barcodeInput').addEventListener('keydown', handleBarcodeInput);
+
+    // Reports
+    document.getElementById('time-range-selector').addEventListener('change', updateReports);
+}
+
+// =================================================================================
+// Rendering Functions
+// =================================================================================
+
+function renderAll() {
+    renderProductGrid();
+    renderProductTable();
+    renderClientTable();
+    renderSupplierTable();
+    updateCart();
     updateDashboard();
     updateReports();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // The app is initialized after auth check
-});
-
-// Sample data
-let products = [
-    { id: 1, name: 'Coca Cola 350ml', category: 'Bebidas', price: 2.50, stock: 100, barcode: '7702010234567' },
-    { id: 2, name: 'Pan de molde', category: 'Panadería', price: 3.20, stock: 50, barcode: '7702010234568' },
-    { id: 3, name: 'Leche entera 1L', category: 'Lácteos', price: 4.80, stock: 30, barcode: '7702010234569' },
-    { id: 4, name: 'Galletas Oreo', category: 'Snacks', price: 3.90, stock: 80, barcode: '7702010234570' },
-    { id: 5, name: 'Jugo de naranja 1L', category: 'Bebidas', price: 4.00, stock: 40, barcode: '7702010234571' },
-    { id: 6, name: 'Agua mineral 500ml', category: 'Bebidas', price: 1.50, stock: 120, barcode: '7702010234572' },
-    { id: 7, name: 'Snacks variados', category: 'Snacks', price: 2.50, stock: 60, barcode: '7702010234573' },
-    { id: 8, name: 'Chocolate 100g', category: 'Dulces', price: 2.50, stock: 70, barcode: '7702010234574' },
-];
-
-let clients = [
-    { id: 1, name: 'Juan Pérez', email: 'juan.perez@example.com', phone: '123456789', address: 'Calle Falsa 123' },
-    { id: 2, name: 'María López', email: 'maria.lopez@example.com', phone: '987654321', address: 'Avenida Siempreviva 742' },
-];
-
-let suppliers = [
-    { id: 1, company: 'Distribuidora ABC', contact: 'Carlos Ruiz', email: 'carlos.ruiz@distribuidora-abc.com', phone: '111222333', address: 'Polígono Industrial 1', products: 'Bebidas, Snacks' },
-    { id: 2, company: 'Lácteos del Sur', contact: 'Ana Gómez', email: 'ana.gomez@lacteosdelsur.com', phone: '444555666', address: 'Zona Franca 2', products: 'Lácteos, Jugos' },
-];
-
-let cart = [];
-let sales = [];
-let categoryChart = null;
-let paymentMethodChart = null;
-
-// Navigation
-function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
-    document.getElementById(`${sectionId}-section`).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    document.getElementById(`nav-${sectionId}`).classList.add('active');
-}
-
-// Dashboard
 function updateDashboard() {
     document.getElementById('totalProducts').textContent = products.length;
     const lowStock = products.filter(p => p.stock < 20).length;
     document.getElementById('lowStockProducts').textContent = lowStock;
-    const todaySales = sales.filter(s => new Date(s.date).toDateString() === new Date().toDateString());
+    const todaySales = getSalesByTimeRange('today');
     document.getElementById('totalSales').textContent = todaySales.length;
     const todayRevenue = todaySales.reduce((sum, sale) => sum + sale.total, 0);
     document.getElementById('totalRevenue').textContent = `$${todayRevenue.toFixed(2)}`;
 }
 
-// Product Management
-function loadProducts() {
-    const productsTableBody = document.getElementById('productsTableBody');
+function renderProductGrid(filteredProducts = products) {
     const productsGrid = document.getElementById('productsGrid');
-    productsTableBody.innerHTML = '';
     productsGrid.innerHTML = '';
 
-    products.forEach(product => {
-        const tableRow = `
-            <tr>
-                <td>${product.id}</td>
-                <td>${product.name}</td>
-                <td>${product.category}</td>
-                <td>$${product.price.toFixed(2)}</td>
-                <td>${product.stock}</td>
-                <td>${product.barcode}</td>
-                <td class="actions-cell">
-                    <button onclick="editProduct(${product.id})">✏️</button>
-                    <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
-                </td>
-            </tr>
-        `;
-        productsTableBody.innerHTML += tableRow;
+    if (filteredProducts.length === 0) {
+        productsGrid.innerHTML = '<p>No se encontraron productos.</p>';
+        return;
+    }
 
+    filteredProducts.forEach(product => {
         const productCard = `
-            <div class="product-card" onclick="addToCart(${product.id})">
+            <div class="product-card" onclick="addToCart('${product.id}')">
                 <div class="product-name">${product.name}</div>
                 <div class="product-price">$${product.price.toFixed(2)}</div>
             </div>
@@ -103,142 +157,54 @@ function loadProducts() {
     });
 }
 
-function openProductModal() {
-    document.getElementById('productModal').classList.add('active');
-    document.getElementById('productModalTitle').textContent = 'Agregar Producto';
-    document.getElementById('productForm').reset();
-    document.getElementById('productId').value = '';
-}
-
-function closeProductModal() {
-    document.getElementById('productModal').classList.remove('active');
-}
-
-function saveProduct(event) {
-    event.preventDefault();
-    const id = document.getElementById('productId').value;
-    const name = document.getElementById('productName').value;
-    const category = document.getElementById('productCategory').value;
-    const price = parseFloat(document.getElementById('productPrice').value);
-    const stock = parseInt(document.getElementById('productStock').value);
-    const barcode = document.getElementById('productBarcode').value;
-
-    if (id) {
-        const productIndex = products.findIndex(p => p.id == id);
-        products[productIndex] = { id: parseInt(id), name, category, price, stock, barcode };
-    } else {
-        const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-        products.push({ id: newId, name, category, price, stock, barcode });
-    }
-
-    loadProducts();
-    updateDashboard();
-    closeProductModal();
-}
-
-function editProduct(id) {
-    const product = products.find(p => p.id === id);
-    if (product) {
-        openProductModal();
-        document.getElementById('productModalTitle').textContent = 'Editar Producto';
-        document.getElementById('productId').value = product.id;
-        document.getElementById('productName').value = product.name;
-        document.getElementById('productCategory').value = product.category;
-        document.getElementById('productPrice').value = product.price;
-        document.getElementById('productStock').value = product.stock;
-        document.getElementById('productBarcode').value = product.barcode;
-    }
-}
-
-function deleteProduct(id) {
-    if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-        products = products.filter(p => p.id !== id);
-        loadProducts();
-        updateDashboard();
-    }
-}
-
-// Client Management
-function loadClients() {
-    const clientsTableBody = document.getElementById('clientsTableBody');
-    clientsTableBody.innerHTML = '';
-    clients.forEach(client => {
-        const row = `
+function renderProductTable() {
+    const tableBody = document.getElementById('productsTableBody');
+    tableBody.innerHTML = '';
+    products.forEach(product => {
+        tableBody.innerHTML += `
             <tr>
-                <td>${client.id}</td>
+                <td>${product.id.substring(0, 6)}...</td>
+                <td>${product.name}</td>
+                <td>${product.category}</td>
+                <td>$${product.price.toFixed(2)}</td>
+                <td>${product.stock}</td>
+                <td>${product.barcode}</td>
+                <td class="actions-cell">
+                    <button onclick="editProduct('${product.id}')">✏️</button>
+                    <button class="delete-btn" onclick="deleteItem('products', '${product.id}')">🗑️</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function renderClientTable() {
+    const tableBody = document.getElementById('clientsTableBody');
+    tableBody.innerHTML = '';
+    clients.forEach(client => {
+        tableBody.innerHTML += `
+            <tr>
+                <td>${client.id.substring(0, 6)}...</td>
                 <td>${client.name}</td>
                 <td>${client.email}</td>
                 <td>${client.phone}</td>
                 <td>${client.address}</td>
                 <td class="actions-cell">
-                    <button onclick="editClient(${client.id})">✏️</button>
-                    <button class="delete-btn" onclick="deleteClient(${client.id})">🗑️</button>
+                    <button onclick="editClient('${client.id}')">✏️</button>
+                    <button class="delete-btn" onclick="deleteItem('clients', '${client.id}')">🗑️</button>
                 </td>
             </tr>
         `;
-        clientsTableBody.innerHTML += row;
     });
 }
 
-function openClientModal() {
-    document.getElementById('clientModal').classList.add('active');
-    document.getElementById('clientModalTitle').textContent = 'Agregar Cliente';
-    document.getElementById('clientForm').reset();
-    document.getElementById('clientId').value = '';
-}
-
-function closeClientModal() {
-    document.getElementById('clientModal').classList.remove('active');
-}
-
-function saveClient(event) {
-    event.preventDefault();
-    const id = document.getElementById('clientId').value;
-    const name = document.getElementById('clientName').value;
-    const email = document.getElementById('clientEmail').value;
-    const phone = document.getElementById('clientPhone').value;
-    const address = document.getElementById('clientAddress').value;
-
-    if (id) {
-        const clientIndex = clients.findIndex(c => c.id == id);
-        clients[clientIndex] = { id: parseInt(id), name, email, phone, address };
-    } else {
-        const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
-        clients.push({ id: newId, name, email, phone, address });
-    }
-
-    loadClients();
-    closeClientModal();
-}
-
-function editClient(id) {
-    const client = clients.find(c => c.id === id);
-    if (client) {
-        openClientModal();
-        document.getElementById('clientModalTitle').textContent = 'Editar Cliente';
-        document.getElementById('clientId').value = client.id;
-        document.getElementById('clientName').value = client.name;
-        document.getElementById('clientEmail').value = client.email;
-        document.getElementById('clientPhone').value = client.phone;
-        document.getElementById('clientAddress').value = client.address;
-    }
-}
-
-function deleteClient(id) {
-    if (confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
-        clients = clients.filter(c => c.id !== id);
-        loadClients();
-    }
-}
-
-// Supplier Management
-function loadSuppliers() {
-    const suppliersTableBody = document.getElementById('suppliersTableBody');
-    suppliersTableBody.innerHTML = '';
+function renderSupplierTable() {
+    const tableBody = document.getElementById('suppliersTableBody');
+    tableBody.innerHTML = '';
     suppliers.forEach(supplier => {
-        const row = `
+        tableBody.innerHTML += `
             <tr>
-                <td>${supplier.id}</td>
+                <td>${supplier.id.substring(0, 6)}...</td>
                 <td>${supplier.company}</td>
                 <td>${supplier.contact}</td>
                 <td>${supplier.email}</td>
@@ -246,100 +212,243 @@ function loadSuppliers() {
                 <td>${supplier.address}</td>
                 <td>${supplier.products}</td>
                 <td class="actions-cell">
-                    <button onclick="editSupplier(${supplier.id})">✏️</button>
-                    <button class="delete-btn" onclick="deleteSupplier(${supplier.id})">🗑️</button>
+                    <button onclick="editSupplier('${supplier.id}')">✏️</button>
+                    <button class="delete-btn" onclick="deleteItem('suppliers', '${supplier.id}')">🗑️</button>
                 </td>
             </tr>
         `;
-        suppliersTableBody.innerHTML += row;
     });
 }
 
-function openSupplierModal() {
-    document.getElementById('supplierModal').classList.add('active');
-    document.getElementById('supplierModalTitle').textContent = 'Agregar Proveedor';
+
+// =================================================================================
+// CRUD (Create, Read, Update, Delete) Operations
+// =================================================================================
+
+// --- Product ---
+function openProductModal(productId = null) {
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value = '';
+    const modalTitle = document.getElementById('productModalTitle');
+
+    if (productId) {
+        modalTitle.textContent = 'Editar Producto';
+        const product = products.find(p => p.id === productId);
+        if (product) {
+            document.getElementById('productId').value = product.id;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productCategory').value = product.category;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productStock').value = product.stock;
+            document.getElementById('productBarcode').value = product.barcode;
+        }
+    } else {
+        modalTitle.textContent = 'Agregar Producto';
+    }
+    document.getElementById('productModal').classList.add('active');
+}
+
+async function saveProduct(event) {
+    event.preventDefault();
+    const id = document.getElementById('productId').value;
+    const data = {
+        name: document.getElementById('productName').value,
+        category: document.getElementById('productCategory').value,
+        price: parseFloat(document.getElementById('productPrice').value),
+        stock: parseInt(document.getElementById('productStock').value),
+        barcode: document.getElementById('productBarcode').value,
+    };
+
+    try {
+        if (id) {
+            await updateDoc(doc(db, "products", id), data);
+        } else {
+            await addDoc(collection(db, "products"), data);
+        }
+        closeProductModal();
+        await loadAllData();
+        renderAll();
+    } catch (error) {
+        console.error("Error saving product:", error);
+        alert("Error al guardar el producto.");
+    }
+}
+
+function editProduct(id) {
+    openProductModal(id);
+}
+
+
+// --- Client ---
+function openClientModal(clientId = null) {
+    document.getElementById('clientForm').reset();
+    document.getElementById('clientId').value = '';
+    const modalTitle = document.getElementById('clientModalTitle');
+
+    if (clientId) {
+        modalTitle.textContent = 'Editar Cliente';
+        const client = clients.find(c => c.id === clientId);
+        if (client) {
+            document.getElementById('clientId').value = client.id;
+            document.getElementById('clientName').value = client.name;
+            document.getElementById('clientEmail').value = client.email;
+            document.getElementById('clientPhone').value = client.phone;
+            document.getElementById('clientAddress').value = client.address;
+        }
+    } else {
+        modalTitle.textContent = 'Agregar Cliente';
+    }
+    document.getElementById('clientModal').classList.add('active');
+}
+
+async function saveClient(event) {
+    event.preventDefault();
+    const id = document.getElementById('clientId').value;
+    const data = {
+        name: document.getElementById('clientName').value,
+        email: document.getElementById('clientEmail').value,
+        phone: document.getElementById('clientPhone').value,
+        address: document.getElementById('clientAddress').value,
+    };
+
+    try {
+        if (id) {
+            await updateDoc(doc(db, "clients", id), data);
+        } else {
+            await addDoc(collection(db, "clients"), data);
+        }
+        closeClientModal();
+        await loadAllData();
+        renderClientTable();
+    } catch (error) {
+        console.error("Error saving client:", error);
+        alert("Error al guardar el cliente.");
+    }
+}
+
+function editClient(id) {
+    openClientModal(id);
+}
+
+// --- Supplier ---
+function openSupplierModal(supplierId = null) {
     document.getElementById('supplierForm').reset();
     document.getElementById('supplierId').value = '';
+    const modalTitle = document.getElementById('supplierModalTitle');
+
+    if (supplierId) {
+        modalTitle.textContent = 'Editar Proveedor';
+        const supplier = suppliers.find(s => s.id === supplierId);
+        if (supplier) {
+            document.getElementById('supplierId').value = supplier.id;
+            document.getElementById('supplierCompany').value = supplier.company;
+            document.getElementById('supplierContact').value = supplier.contact;
+            document.getElementById('supplierEmail').value = supplier.email;
+            document.getElementById('supplierPhone').value = supplier.phone;
+            document.getElementById('supplierAddress').value = supplier.address;
+            document.getElementById('supplierProducts').value = supplier.products;
+        }
+    } else {
+        modalTitle.textContent = 'Agregar Proveedor';
+    }
+    document.getElementById('supplierModal').classList.add('active');
 }
 
-function closeSupplierModal() {
-    document.getElementById('supplierModal').classList.remove('active');
-}
-
-function saveSupplier(event) {
+async function saveSupplier(event) {
     event.preventDefault();
     const id = document.getElementById('supplierId').value;
-    const company = document.getElementById('supplierCompany').value;
-    const contact = document.getElementById('supplierContact').value;
-    const email = document.getElementById('supplierEmail').value;
-    const phone = document.getElementById('supplierPhone').value;
-    const address = document.getElementById('supplierAddress').value;
-    const products = document.getElementById('supplierProducts').value;
+    const data = {
+        company: document.getElementById('supplierCompany').value,
+        contact: document.getElementById('supplierContact').value,
+        email: document.getElementById('supplierEmail').value,
+        phone: document.getElementById('supplierPhone').value,
+        address: document.getElementById('supplierAddress').value,
+        products: document.getElementById('supplierProducts').value,
+    };
 
-    if (id) {
-        const supplierIndex = suppliers.findIndex(s => s.id == id);
-        suppliers[supplierIndex] = { id: parseInt(id), company, contact, email, phone, address, products };
-    } else {
-        const newId = suppliers.length > 0 ? Math.max(...suppliers.map(s => s.id)) + 1 : 1;
-        suppliers.push({ id: newId, company, contact, email, phone, address, products });
+    try {
+        if (id) {
+            await updateDoc(doc(db, "suppliers", id), data);
+        } else {
+            await addDoc(collection(db, "suppliers"), data);
+        }
+        closeSupplierModal();
+        await loadAllData();
+        renderSupplierTable();
+    } catch (error) {
+        console.error("Error saving supplier:", error);
+        alert("Error al guardar el proveedor.");
     }
-
-    loadSuppliers();
-    closeSupplierModal();
 }
 
 function editSupplier(id) {
-    const supplier = suppliers.find(s => s.id === id);
-    if (supplier) {
-        openSupplierModal();
-        document.getElementById('supplierModalTitle').textContent = 'Editar Proveedor';
-        document.getElementById('supplierId').value = supplier.id;
-        document.getElementById('supplierCompany').value = supplier.company;
-        document.getElementById('supplierContact').value = supplier.contact;
-        document.getElementById('supplierEmail').value = supplier.email;
-        document.getElementById('supplierPhone').value = supplier.phone;
-        document.getElementById('supplierAddress').value = supplier.address;
-        document.getElementById('supplierProducts').value = supplier.products;
+    openSupplierModal(id);
+}
+
+// --- Generic Delete ---
+async function deleteItem(collectionName, id) {
+    if (confirm(`¿Estás seguro de que quieres eliminar este elemento?`)) {
+        try {
+            await deleteDoc(doc(db, collectionName, id));
+            console.log(`${collectionName} item ${id} deleted.`);
+            await loadAllData();
+            renderAll();
+        } catch (error) {
+            console.error(`Error deleting item from ${collectionName}:`, error);
+            alert("Error al eliminar el elemento.");
+        }
     }
 }
 
-function deleteSupplier(id) {
-    if (confirm('¿Estás seguro de que quieres eliminar este proveedor?')) {
-        suppliers = suppliers.filter(s => s.id !== id);
-        loadSuppliers();
-    }
-}
 
-// Cashier
+// =================================================================================
+// Point of Sale (POS) & Cart Logic
+// =================================================================================
+
 function searchProducts() {
     const searchTerm = document.getElementById('productSearch').value.toLowerCase();
-    const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm));
-    const productsGrid = document.getElementById('productsGrid');
-    productsGrid.innerHTML = '';
-    filteredProducts.forEach(product => {
-        const productCard = `
-            <div class="product-card" onclick="addToCart(${product.id})">
-                <div class="product-name">${product.name}</div>
-                <div class="product-price">$${product.price.toFixed(2)}</div>
-            </div>
-        `;
-        productsGrid.innerHTML += productCard;
-    });
+    const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm) || (p.barcode && p.barcode.includes(searchTerm)));
+    renderProductGrid(filtered);
+}
+
+function handleBarcodeInput(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addByBarcode();
+    }
+}
+
+function addByBarcode() {
+    const barcode = document.getElementById('barcodeInput').value;
+    const product = products.find(p => p.barcode === barcode);
+    if (product) {
+        addToCart(product.id);
+        document.getElementById('barcodeInput').value = '';
+    } else {
+        alert('Producto no encontrado con ese código de barras.');
+    }
 }
 
 function addToCart(productId) {
     const product = products.find(p => p.id === productId);
-    if (product && product.stock > 0) {
-        const cartItem = cart.find(item => item.id === productId);
-        if (cartItem) {
+    if (!product) return;
+
+    if (product.stock <= 0) {
+        alert("Producto sin stock.");
+        return;
+    }
+
+    const cartItem = cart.find(item => item.id === productId);
+    if (cartItem) {
+        if (cartItem.quantity < product.stock) {
             cartItem.quantity++;
         } else {
-            cart.push({ ...product, quantity: 1 });
+            alert("Stock insuficiente.");
         }
-        product.stock--;
-        updateCart();
-        loadProducts();
+    } else {
+        cart.push({ ...product, quantity: 1 });
     }
+    updateCart();
 }
 
 function updateCart() {
@@ -348,7 +457,7 @@ function updateCart() {
     const completeBtn = document.getElementById('completeBtn');
 
     if (cart.length === 0) {
-        cartItems.innerHTML = '<div class="empty-cart"><p>No hay productos en el carrito</p><p style="font-size: 14px; margin-top: 8px;">Busca y agrega productos para comenzar</p></div>';
+        cartItems.innerHTML = '<div class="empty-cart"><p>No hay productos en el carrito</p></div>';
         cartTotal.style.display = 'none';
         completeBtn.disabled = true;
     } else {
@@ -357,21 +466,20 @@ function updateCart() {
         cart.forEach(item => {
             const itemTotal = item.price * item.quantity;
             subtotal += itemTotal;
-            const cartItemHTML = `
+            cartItems.innerHTML += `
                 <div class="cart-item">
                     <div class="cart-item-details">
                         <div class="cart-item-name">${item.name}</div>
                         <div class="cart-item-price">$${item.price.toFixed(2)} x ${item.quantity} = $${itemTotal.toFixed(2)}</div>
                     </div>
                     <div class="cart-item-actions">
-                        <button class="quantity-btn" onclick="changeQuantity(${item.id}, -1)">-</button>
+                        <button class="quantity-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
                         <span class="cart-item-quantity">${item.quantity}</span>
-                        <button class="quantity-btn" onclick="changeQuantity(${item.id}, 1)">+</button>
-                        <button class="remove-btn" onclick="removeFromCart(${item.id})">🗑️</button>
+                        <button class="quantity-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
+                        <button class="remove-btn" onclick="removeFromCart('${item.id}')">🗑️</button>
                     </div>
                 </div>
             `;
-            cartItems.innerHTML += cartItemHTML;
         });
 
         const tax = subtotal * 0.19;
@@ -387,106 +495,77 @@ function updateCart() {
 
 function changeQuantity(productId, amount) {
     const cartItem = cart.find(item => item.id === productId);
-    const product = products.find(p => p.id === productId);
+    if (!cartItem) return;
 
-    if (cartItem) {
-        if (amount > 0 && product.stock > 0) {
-            cartItem.quantity += amount;
-            product.stock -= amount;
-        } else if (amount < 0) {
-            cartItem.quantity += amount;
-            product.stock -= amount;
-            if (cartItem.quantity <= 0) {
-                cart = cart.filter(item => item.id !== productId);
-            }
+    const product = products.find(p => p.id === productId);
+    
+    if (amount > 0 && cartItem.quantity < product.stock) {
+        cartItem.quantity++;
+    } else if (amount < 0) {
+        cartItem.quantity--;
+        if (cartItem.quantity <= 0) {
+            cart = cart.filter(item => item.id !== productId);
         }
-        updateCart();
-        loadProducts();
+    } else if (amount > 0) {
+        alert("Stock insuficiente");
     }
+
+    updateCart();
 }
 
 function removeFromCart(productId) {
-    const cartItemIndex = cart.findIndex(item => item.id === productId);
-    if (cartItemIndex > -1) {
-        const cartItem = cart[cartItemIndex];
-        const product = products.find(p => p.id === productId);
-        product.stock += cartItem.quantity;
-        cart.splice(cartItemIndex, 1);
-        updateCart();
-        loadProducts();
-    }
+    cart = cart.filter(item => item.id !== productId);
+    updateCart();
 }
 
 function clearCart() {
-    cart.forEach(item => {
-        const product = products.find(p => p.id === item.id);
-        product.stock += item.quantity;
-    });
     cart = [];
     updateCart();
-    loadProducts();
 }
 
-function selectPayment(method) {
-    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
-    document.querySelector(`.payment-method[onclick*="${method}"]`).classList.add('selected');
-    document.getElementById('cashPayment').style.display = method === 'efectivo' ? 'block' : 'none';
-}
+async function completeSale() {
+    if (cart.length === 0) return;
 
-function calculateChange() {
     const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
-    const received = parseFloat(document.getElementById('receivedAmount').value);
-    const changeInfo = document.getElementById('changeInfo');
-    if (received >= total) {
-        const change = received - total;
-        document.getElementById('changeAmount').textContent = `$${change.toFixed(2)}`;
-        changeInfo.style.display = 'block';
-    } else {
-        changeInfo.style.display = 'none';
+    const paymentMethod = document.querySelector('.payment-method.selected input').value;
+
+    const batch = writeBatch(db);
+
+    const sale = {
+        date: new Date().toISOString(),
+        items: cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price, category: item.category })),
+        total,
+        paymentMethod
+    };
+    
+    // 1. Update stock for each product in the cart
+    for (const item of cart) {
+        const productRef = doc(db, "products", item.id);
+        const newStock = item.stock - item.quantity;
+        batch.update(productRef, { stock: newStock });
     }
-}
+    
+    // 2. Add the new sale document
+    const salesRef = doc(collection(db, "sales"));
+    batch.set(salesRef, sale);
 
-function completeSale() {
-    if (cart.length > 0) {
-        const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
-        const paymentMethod = document.querySelector('.payment-method.selected input').value;
-
-        const sale = {
-            id: sales.length + 1,
-            date: new Date().toISOString(),
-            items: [...cart],
-            total: total,
-            paymentMethod: paymentMethod
-        };
-
-        sales.push(sale);
+    try {
+        await batch.commit();
         alert('¡Venta completada con éxito!');
-        
-        cart = [];
-        updateCart();
-        updateDashboard();
-        updateReports(); // Update reports after sale
+        clearCart();
+        await loadAllData(); // Reload data to reflect stock changes
+        renderAll();
+    } catch (error) {
+        console.error("Error completing sale:", error);
+        alert("Error al completar la venta. El stock puede no estar actualizado. Por favor, refresca la página.");
     }
 }
 
-function handleBarcodeInput(event) {
-    if (event.key === 'Enter') {
-        addByBarcode();
-    }
-}
 
-function addByBarcode() {
-    const barcode = document.getElementById('barcodeInput').value;
-    const product = products.find(p => p.barcode === barcode);
-    if (product) {
-        addToCart(product.id);
-        document.getElementById('barcodeInput').value = '';
-    } else {
-        alert('Producto no encontrado.');
-    }
-}
+// =================================================================================
+// Reports Logic
+// =================================================================================
 
-// Reports
 function updateReports() {
     const timeRange = document.getElementById('time-range-selector').value;
     const filteredSales = getSalesByTimeRange(timeRange);
@@ -499,22 +578,24 @@ function updateReports() {
 
 function getSalesByTimeRange(timeRange) {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
+    
     if (timeRange === 'today') {
-        return sales.filter(s => new Date(s.date).toDateString() === today.toDateString());
-    } else if (timeRange === 'week') {
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        return sales.filter(s => new Date(s.date) >= startOfWeek);
+        const today = now.toISOString().split('T')[0];
+        return sales.filter(s => s.date.startsWith(today));
+    } 
+    
+    const startTime = new Date(now);
+    if (timeRange === 'week') {
+        startTime.setDate(now.getDate() - now.getDay()); // Start of the week (Sunday)
     } else if (timeRange === 'month') {
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        return sales.filter(s => new Date(s.date) >= startOfMonth);
+        startTime.setDate(1); // Start of the month
     } else if (timeRange === 'year') {
-        const startOfYear = new Date(today.getFullYear(), 0, 1);
-        return sales.filter(s => new Date(s.date) >= startOfYear);
+        startTime.setMonth(0, 1); // Start of the year
     }
-    return sales;
+    
+    startTime.setHours(0, 0, 0, 0); // Set to beginning of the day
+
+    return sales.filter(s => new Date(s.date) >= startTime);
 }
 
 function updateStatsGrid(filteredSales) {
@@ -546,27 +627,24 @@ function updateStatsGrid(filteredSales) {
 
 function updateCategoryChart(filteredSales) {
     const categoryData = filteredSales.flatMap(s => s.items).reduce((acc, item) => {
-        acc[item.category] = (acc[item.category] || 0) + (item.price * item.quantity);
+        const category = item.category || 'Sin Categoría';
+        acc[category] = (acc[category] || 0) + (item.price * item.quantity);
         return acc;
     }, {});
 
     const ctx = document.getElementById('category-chart').getContext('2d');
-    if(categoryChart) {
-        categoryChart.destroy();
-    }
+    if(categoryChart) categoryChart.destroy();
+    
     categoryChart = new Chart(ctx, {
         type: 'pie',
         data: {
             labels: Object.keys(categoryData),
             datasets: [{
                 data: Object.values(categoryData),
-                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'],
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
@@ -577,9 +655,8 @@ function updatePaymentMethodChart(filteredSales) {
     }, {});
 
     const ctx = document.getElementById('payment-method-chart').getContext('2d');
-     if(paymentMethodChart) {
-        paymentMethodChart.destroy();
-    }
+    if(paymentMethodChart) paymentMethodChart.destroy();
+    
     paymentMethodChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -589,10 +666,7 @@ function updatePaymentMethodChart(filteredSales) {
                 backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
@@ -611,28 +685,91 @@ function updateBestSellingProducts(filteredSales) {
     const tableBody = document.getElementById('best-selling-products-body');
     tableBody.innerHTML = '';
     sortedProducts.forEach(p => {
-        const row = `
+        tableBody.innerHTML += `
             <tr>
                 <td>${p.name}</td>
                 <td>${p.quantity}</td>
                 <td>$${p.revenue.toFixed(2)}</td>
             </tr>
         `;
-        tableBody.innerHTML += row;
     });
 }
 
 function exportPDF() {
-    alert('La funcionalida de exportar a PDF no está implementada en esta versión');
+    alert('La funcionalidad de exportar a PDF no está implementada en esta versión.');
 }
 
 
-function logout() {
-    firebase.auth().signOut().then(() => {
-        // Sign-out successful.
-        window.location.href = 'login.html';
-    }).catch((error) => {
-        // An error happened.
-        console.error('Logout Error:', error);
-    });
+// =================================================================================
+// UI & Utility Functions
+// =================================================================================
+
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+    const activeSection = document.getElementById(`${sectionId}-section`);
+    if (activeSection) {
+      activeSection.classList.add('active');
+    }
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    const activeNavItem = document.getElementById(`nav-${sectionId}`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
 }
+
+function selectPayment(method) {
+    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+    document.querySelector(`.payment-method[onclick*="${method}"]`).classList.add('selected');
+    document.getElementById('cashPayment').style.display = method === 'efectivo' ? 'block' : 'none';
+}
+
+function calculateChange() {
+    const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
+    const received = parseFloat(document.getElementById('receivedAmount').value);
+    const changeInfo = document.getElementById('changeInfo');
+    if (received >= total) {
+        const change = received - total;
+        document.getElementById('changeAmount').textContent = `$${change.toFixed(2)}`;
+        changeInfo.style.display = 'block';
+    } else {
+        changeInfo.style.display = 'none';
+    }
+}
+
+function closeProductModal() {
+    document.getElementById('productModal').classList.remove('active');
+}
+
+function closeClientModal() {
+    document.getElementById('clientModal').classList.remove('active');
+}
+
+function closeSupplierModal() {
+    document.getElementById('supplierModal').classList.remove('active');
+}
+
+// Make functions globally available if they are called directly from HTML onclick attributes
+window.showSection = showSection;
+window.openProductModal = openProductModal;
+window.closeProductModal = closeProductModal;
+window.saveProduct = saveProduct;
+window.editProduct = editProduct;
+window.openClientModal = openClientModal;
+window.closeClientModal = closeClientModal;
+window.saveClient = saveClient;
+window.editClient = editClient;
+window.openSupplierModal = openSupplierModal;
+window.closeSupplierModal = closeSupplierModal;
+window.saveSupplier = saveSupplier;
+window.editSupplier = editSupplier;
+window.deleteItem = deleteItem;
+window.searchProducts = searchProducts;
+window.handleBarcodeInput = handleBarcodeInput;
+window.addByBarcode = addByBarcode;
+window.addToCart = addToCart;
+window.changeQuantity = changeQuantity;
+window.removeFromCart = removeFromCart;
+window.clearCart = clearCart;
+window.selectPayment = selectPayment;
+window.calculateChange = calculateChange;
+window.complete
