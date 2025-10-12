@@ -625,28 +625,31 @@ function updateStatsGrid(filteredSales) {
     `;
 }
 
-function updateCategoryChart(filteredSales) {
-    const categoryData = filteredSales.flatMap(s => s.items).reduce((acc, item) => {
-        const category = item.category || 'Sin Categoría';
-        acc[category] = (acc[category] || 0) + (item.price * item.quantity);
-        return acc;
-    }, {});
+    // --- Chart Updates ---
+    function updateCategoryChart(filteredSales) {
+        const categoryData = filteredSales.flatMap(s => s.items)
+            .filter(item => item.category) // Esta línea excluye los productos sin categoría
+            .reduce((acc, item) => {
+                acc[item.category] = (acc[item.category] || 0) + (item.price * item.quantity);
+                return acc;
+        }, {});
 
-    const ctx = document.getElementById('category-chart').getContext('2d');
-    if(categoryChart) categoryChart.destroy();
-    
-    categoryChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(categoryData),
-            datasets: [{
-                data: Object.values(categoryData),
-                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'],
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
+        const ctx = document.getElementById('category-chart').getContext('2d');
+        if(categoryChart) categoryChart.destroy();
+        
+        categoryChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(categoryData),
+                datasets: [{
+                    data: Object.values(categoryData),
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'],
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
 
 function updatePaymentMethodChart(filteredSales) {
     const paymentData = filteredSales.reduce((acc, sale) => {
@@ -772,4 +775,4 @@ window.removeFromCart = removeFromCart;
 window.clearCart = clearCart;
 window.selectPayment = selectPayment;
 window.calculateChange = calculateChange;
-window.complete
+window.completeSale = completeSale;

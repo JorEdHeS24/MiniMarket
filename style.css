@@ -435,7 +435,7 @@ body {
 }
 
 .payment-radio {
-    margin-right: 4px;
+    display: none;
 }
 
 .amount-input {
